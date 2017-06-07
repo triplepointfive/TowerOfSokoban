@@ -8,12 +8,43 @@ class Wall extends ex.Actor {
     super(x, y, 40, 40, ex.Color.Gray);
     this.collisionType = ex.CollisionType.Fixed;
   }
+
+  public onInitialize(engine: ex.Engine) {
+    console.log("Walls");
+    this.addCollisionGroup("Walls");
+  }
 }
+
+const vel = 40;
 
 class Player extends ex.Actor {
   constructor(x: number, y: number) {
     super(x, y, 40, 40, ex.Color.White);
-    this.collisionType = ex.CollisionType.Fixed;
+    this.collisionType = ex.CollisionType.Active;
+
+    this.onCollidesWith("Walls", function() {
+      console.log("Wall");
+    });
+  }
+
+  public update(engine: ex.Engine, delta: number) {
+    super.update(engine, delta);
+
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.W)) {
+      this.pos = this.pos.add(new ex.Vector(0, -vel));
+    }
+
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.S)) {
+      this.pos = this.pos.add(new ex.Vector(0, vel));
+    }
+
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.D)) {
+      this.pos = this.pos.add(new ex.Vector(vel, 0));
+    }
+
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.A)) {
+      this.pos = this.pos.add(new ex.Vector(-vel, 0));
+    }
   }
 }
 
@@ -32,6 +63,8 @@ class Box extends ex.Actor {
 }
 
 class Level {
+  public player: Player;
+
   constructor(level: Array<string>) {
     const offsetX = 50;
     const offsetY = 50;
@@ -51,7 +84,8 @@ class Level {
             game.add(new Holder(x, y));
             break;
           case "@":
-            game.add(new Player(x, y));
+            this.player = new Player(x, y);
+            game.add(this.player);
             break;
         }
       }
