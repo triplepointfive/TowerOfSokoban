@@ -1,13 +1,13 @@
 let game = new ex.Engine({
-  width: 800,
-  height: 600
+  width: 320,
+  height: 480
 });
 
 abstract class Cell extends ex.Actor {
   static readonly size: number = 40;
 
   constructor(x: number, y: number, color: ex.Color) {
-    super(x * Cell.size, y * Cell.size, Cell.size, Cell.size, color);
+    super(Cell.size / 2 + x * Cell.size, Cell.size / 2 + y * Cell.size, Cell.size, Cell.size, color);
   }
 }
 
@@ -23,43 +23,53 @@ class Box extends Cell {
   constructor(x: number, y: number) { super(x, y, ex.Color.Orange); }
 }
 
-const vel = Cell.size;
-
 class Player extends Cell {
-  constructor(x: number, y: number) {
-    super(x, y, ex.Color.White);
+  private level: Level;
 
-    this.on("collision", function(ex: ex.CollisionEvent) {
-      if (ex.other instanceof Wall) {
-        ex.actor.pos = ex.actor.oldPos;
-      }
-    });
+  constructor(level: Level, private gridX: number, private gridY: number) {
+    super(gridX, gridY, ex.Color.White);
+
+    this.level = level;
   }
 
   public update(engine: ex.Engine, delta: number) {
     super.update(engine, delta);
 
     if (engine.input.keyboard.wasPressed(ex.Input.Keys.W)) {
-      this.pos = this.pos.add(new ex.Vector(0, -vel));
+      this.moveBy(0, -1);
     }
 
     if (engine.input.keyboard.wasPressed(ex.Input.Keys.S)) {
-      this.pos = this.pos.add(new ex.Vector(0, vel));
+      this.moveBy(0, 1);
     }
 
     if (engine.input.keyboard.wasPressed(ex.Input.Keys.D)) {
-      this.pos = this.pos.add(new ex.Vector(vel, 0));
+      this.moveBy(1, 0);
     }
 
     if (engine.input.keyboard.wasPressed(ex.Input.Keys.A)) {
-      this.pos = this.pos.add(new ex.Vector(-vel, 0));
+      this.moveBy(-1, 0);
     }
+  }
+
+  private moveBy(dx: number, dy: number): void {
+    let cell = this.level.grid[this.gridY + dy][this.gridX + dx];
+
+    console.log(this.gridX + dx, this.gridY + dy);
+
+    if (cell instanceof Wall) {
+      return;
+    }
+
+    this.gridX += dx;
+    this.gridY += dy;
+    this.pos = this.pos.add(new ex.Vector(dx, dy).scale(Cell.size));
   }
 }
 
 class Level {
   protected player: Player;
-  protected grid: Array<Array<Cell>>;
+  public grid: Array<Array<Cell>>;
 
   constructor(level: Array<string>) {
     this.grid = new Array(level.length);
@@ -81,7 +91,7 @@ class Level {
             cell = new Holder(j, i);
             break;
           case "@":
-            this.player = new Player(j, i);
+            this.player = new Player(this, j, i);
             // Player is not a part of a grid.
             game.add(this.player);
             break;
