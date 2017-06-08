@@ -54,22 +54,41 @@ class Player extends Cell {
 
   private moveBy(dx: number, dy: number): void {
     let cell = this.level.grid[this.gridY + dy][this.gridX + dx];
-
-    console.log(this.gridX + dx, this.gridY + dy);
+    const delta = new ex.Vector(dx, dy).scale(Cell.size);
 
     if (cell instanceof Wall) {
       return;
     }
 
+    if (cell instanceof Box) {
+      let nextCell = this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx];
+      if (nextCell === undefined) {
+        cell.pos = cell.pos.add(delta);
+        this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
+        this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = cell;
+
+      } else if (nextCell instanceof Holder) {
+        this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
+        this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = undefined;
+        cell.kill();
+        nextCell.kill();
+        this.level.closeHole();
+      } else {
+        return;
+      }
+    }
+
     this.gridX += dx;
     this.gridY += dy;
-    this.pos = this.pos.add(new ex.Vector(dx, dy).scale(Cell.size));
+    this.pos = this.pos.add(delta);
   }
 }
 
 class Level {
   protected player: Player;
   public grid: Array<Array<Cell>>;
+
+  private holes: number = 0;
 
   constructor(level: Array<string>) {
     this.grid = new Array(level.length);
@@ -89,6 +108,7 @@ class Level {
             break;
           case ".":
             cell = new Holder(j, i);
+            this.holes += 1;
             break;
           case "@":
             this.player = new Player(this, j, i);
@@ -104,6 +124,13 @@ class Level {
     }
 
     console.log(this.grid);
+  }
+
+  public closeHole(): void {
+    this.holes -= 1;
+    if (this.holes === 0) {
+      alert("You won!");
+    }
   }
 }
 
