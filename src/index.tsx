@@ -3,27 +3,36 @@ let game = new ex.Engine({
   height: 600
 });
 
-class Wall extends ex.Actor {
-  constructor(x: number, y: number) {
-    super(x, y, 40, 40, ex.Color.Gray);
-    this.collisionType = ex.CollisionType.Fixed;
-  }
+abstract class Cell extends ex.Actor {
+  static readonly size: number = 40;
 
-  public onInitialize(engine: ex.Engine) {
-    console.log("Walls");
-    this.addCollisionGroup("Walls");
+  constructor(x: number, y: number, color: ex.Color) {
+    super(x * Cell.size, y * Cell.size, Cell.size, Cell.size, color);
   }
 }
 
-const vel = 40;
+class Wall extends Cell {
+  constructor(x: number, y: number) { super(x, y, ex.Color.Gray); }
+}
 
-class Player extends ex.Actor {
+class Holder extends Cell {
+  constructor(x: number, y: number) { super(x, y, ex.Color.Black); }
+}
+
+class Box extends Cell {
+  constructor(x: number, y: number) { super(x, y, ex.Color.Orange); }
+}
+
+const vel = Cell.size;
+
+class Player extends Cell {
   constructor(x: number, y: number) {
-    super(x, y, 40, 40, ex.Color.White);
-    this.collisionType = ex.CollisionType.Active;
+    super(x, y, ex.Color.White);
 
-    this.onCollidesWith("Walls", function() {
-      console.log("Wall");
+    this.on("collision", function(ex: ex.CollisionEvent) {
+      if (ex.other instanceof Wall) {
+        ex.actor.pos = ex.actor.oldPos;
+      }
     });
   }
 
@@ -48,48 +57,43 @@ class Player extends ex.Actor {
   }
 }
 
-class Holder extends ex.Actor {
-  constructor(x: number, y: number) {
-    super(x, y, 40, 40, ex.Color.Black);
-    this.collisionType = ex.CollisionType.Passive;
-  }
-}
-
-class Box extends ex.Actor {
-  constructor(x: number, y: number) {
-    super(x, y, 40, 40, ex.Color.Orange);
-    this.collisionType = ex.CollisionType.Active;
-  }
-}
-
 class Level {
-  public player: Player;
+  protected player: Player;
+  protected grid: Array<Array<Cell>>;
 
   constructor(level: Array<string>) {
-    const offsetX = 50;
-    const offsetY = 50;
+    this.grid = new Array(level.length);
 
     for (let i = 0; i < level.length; i++) {
+      this.grid[i] = new Array(level[i].length);
+
       for (let j = 0; j < level[i].length; j++) {
-        const x = offsetX + j * 40, y = offsetY + i * 40;
+        let cell: Cell = undefined;
 
         switch (level[i][j]) {
           case "#":
-            game.add(new Wall(x, y));
+            cell = new Wall(j, i);
             break;
           case "0":
-            game.add(new Box(x, y));
+            cell = new Box(j, i);
             break;
           case ".":
-            game.add(new Holder(x, y));
+            cell = new Holder(j, i);
             break;
           case "@":
-            this.player = new Player(x, y);
+            this.player = new Player(j, i);
+            // Player is not a part of a grid.
             game.add(this.player);
             break;
         }
+
+        this.grid[i][j] = cell;
+
+        if (cell) { game.add(cell); }
       }
     }
+
+    console.log(this.grid);
   }
 }
 
