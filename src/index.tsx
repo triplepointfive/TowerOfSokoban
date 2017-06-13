@@ -1,6 +1,5 @@
 let game = new ex.Engine({
-  width: 320,
-  height: 480
+  displayMode: ex.DisplayMode.FullScreen
 });
 
 abstract class Cell extends ex.Actor {
@@ -35,19 +34,19 @@ class Player extends Cell {
   public update(engine: ex.Engine, delta: number) {
     super.update(engine, delta);
 
-    if (engine.input.keyboard.wasPressed(ex.Input.Keys.W)) {
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.W) || engine.input.keyboard.wasPressed(ex.Input.Keys.Up)) {
       this.moveBy(0, -1);
     }
 
-    if (engine.input.keyboard.wasPressed(ex.Input.Keys.S)) {
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.S) || engine.input.keyboard.wasPressed(ex.Input.Keys.Down)) {
       this.moveBy(0, 1);
     }
 
-    if (engine.input.keyboard.wasPressed(ex.Input.Keys.D)) {
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.D) || engine.input.keyboard.wasPressed(ex.Input.Keys.Right)) {
       this.moveBy(1, 0);
     }
 
-    if (engine.input.keyboard.wasPressed(ex.Input.Keys.A)) {
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.A) || engine.input.keyboard.wasPressed(ex.Input.Keys.Left)) {
       this.moveBy(-1, 0);
     }
   }
@@ -122,8 +121,6 @@ class Level {
         if (cell) { game.add(cell); }
       }
     }
-
-    console.log(this.grid);
   }
 
   public closeHole(): void {
@@ -134,7 +131,7 @@ class Level {
   }
 }
 
-new Level([
+const simpleLevel = [
   "  ######",
   "  # ..@#",
   "  # 00 #",
@@ -147,6 +144,35 @@ new Level([
   "#   # # ",
   "###   # ",
   "  ##### "
-]);
+];
+
+const level1b = [
+  "######  ##### ",
+  "#    #  #   # ",
+  "# 0  #### 0 # ",
+  "# 0      0  # ",
+  "#  ###@###0 # ",
+  "########## ###",
+  "#  ... #     #",
+  "#  #####0    #",
+  "##.#   # 0   #",
+  " #.##### 0   #",
+  " #  ....0 0  #",
+  " #  ##########",
+  " ####         "
+];
+
+new Level(level1b);
+
+let camera = new ex.LockedCamera();
+
+const bounds = game.getWorldBounds();
+
+const scaleFactor = Math.floor(Math.min(bounds.right / 560, bounds.bottom / 520));
+
+camera.move(new ex.Vector(280, 520), 0);
+camera.zoom(scaleFactor);
+
+game.currentScene.camera = camera;
 
 game.start();
