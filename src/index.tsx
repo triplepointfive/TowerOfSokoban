@@ -139,7 +139,8 @@ class Level extends ex.Scene {
     const widthFactor = engine.getDrawWidth() / this.size.x;
     const heightFactor = engine.getDrawHeight() / this.size.y;
 
-    camera.zoom(Math.floor(Math.min(widthFactor, heightFactor) / Cell.size));
+    // camera.zoom(Math.floor(Math.min(widthFactor, heightFactor) / Cell.size));
+    camera.zoom(Math.min(widthFactor, heightFactor) / Cell.size);
 
     camera.move(new ex.Vector(this.size.x * Cell.size / 2 - Cell.size / 2, this.size.y * Cell.size / 2 - Cell.size / 2), 0);
 
@@ -284,23 +285,24 @@ const level4a = [
 ];
 
 const level4b = [
-  "  ######################",
-  "  #  ..................#",
-  "  #  ###################",
-  "#### #    #####         ",
-  "#  #0##  ##   #         ",
-  "#     #### 0  #         ",
-  "# 00  #  #  0 #         ",
-  "##  00#   00 ##         ",
-  " #0  0   #0  #          ",
-  " # 00 #  #  0#          ",
-  " # 0 0#### 0 #          ",
-  " #       #  ##          ",
-  " #### 0  # ##           ",
-  "    ### ## #            ",
-  "     # 0   #            ",
-  "     #@ #  #            ",
-  "     #######            "
+  "  #############",
+  "  #  .........#",
+  "  #  .........#",
+  "  #  ##########",
+  "#### #    #####",
+  "#  #0##  ##   #",
+  "#     #### 0  #",
+  "# 00  #  #  0 #",
+  "##  00#   00 ##",
+  " #0  0   #0  # ",
+  " # 00 #  #  0# ",
+  " # 0 0#### 0 # ",
+  " #       #  ## ",
+  " #### 0  # ##  ",
+  "    ### ## #   ",
+  "     # 0   #   ",
+  "     #@ #  #   ",
+  "     #######   "
 ];
 
 let game = new ex.Engine({
@@ -310,6 +312,6 @@ let game = new ex.Engine({
 
 // game.addScene("level1b", new Level(simpleLevel));
 // game.addScene("level1b", new Level(level1b));
-game.addScene("level1b", new Level(level2b));
+game.addScene("level1b", new Level(level4b));
 game.goToScene("level1b");
 game.start();
