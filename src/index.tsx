@@ -1,12 +1,8 @@
-let game = new ex.Engine({
-  displayMode: ex.DisplayMode.FullScreen
-});
-
 abstract class Cell extends ex.Actor {
   static readonly size: number = 40;
 
   constructor(x: number, y: number, color: ex.Color) {
-    super(Cell.size / 2 + x * Cell.size, Cell.size / 2 + y * Cell.size, Cell.size, Cell.size, color);
+    super(x * Cell.size, y * Cell.size, Cell.size, Cell.size, color);
   }
 }
 
@@ -83,22 +79,31 @@ class Player extends Cell {
   }
 }
 
-class Level {
+class Level extends ex.Scene {
   protected player: Player;
   public grid: Array<Array<Cell>>;
 
+  private rawLevel: Array<string>;
+
   private holes: number = 0;
+  private size: ex.Vector;
 
   constructor(level: Array<string>) {
-    this.grid = new Array(level.length);
+    super();
+    this.rawLevel = level;
+  }
 
-    for (let i = 0; i < level.length; i++) {
-      this.grid[i] = new Array(level[i].length);
+  public onInitialize(engine: ex.Engine) {
+    this.size = new ex.Vector(this.rawLevel[0].length, this.rawLevel.length);
+    this.grid = new Array();
 
-      for (let j = 0; j < level[i].length; j++) {
+    for (let i = 0; i < this.size.y; i++) {
+      this.grid[i] = new Array(this.size.x);
+
+      for (let j = 0; j < this.size.x; j++) {
         let cell: Cell = undefined;
 
-        switch (level[i][j]) {
+        switch (this.rawLevel[i][j]) {
           case "#":
             cell = new Wall(j, i);
             break;
@@ -112,15 +117,28 @@ class Level {
           case "@":
             this.player = new Player(this, j, i);
             // Player is not a part of a grid.
-            game.add(this.player);
+            this.add(this.player);
             break;
         }
 
-        this.grid[i][j] = cell;
-
-        if (cell) { game.add(cell); }
+        if (cell) {
+          this.add(cell);
+          this.grid[i][j] = cell;
+        }
       }
     }
+
+    let camera = new ex.LockedCamera();
+
+
+    const widthFactor = engine.getDrawWidth() / this.size.x;
+    const heightFactor = engine.getDrawHeight() / this.size.y;
+
+    camera.zoom(Math.floor(Math.min(widthFactor, heightFactor) / Cell.size));
+
+    camera.move(new ex.Vector(this.size.x * Cell.size / 2 - Cell.size / 2, this.size.y * Cell.size / 2 - Cell.size / 2), 0);
+
+    this.camera = camera;
   }
 
   public closeHole(): void {
@@ -162,17 +180,12 @@ const level1b = [
   " ####         "
 ];
 
-new Level(level1b);
+let game = new ex.Engine({
+  displayMode: ex.DisplayMode.FullScreen
+});
 
-let camera = new ex.LockedCamera();
 
-const bounds = game.getWorldBounds();
-
-const scaleFactor = Math.floor(Math.min(bounds.right / 560, bounds.bottom / 520));
-
-camera.move(new ex.Vector(280, 520), 0);
-camera.zoom(scaleFactor);
-
-game.currentScene.camera = camera;
-
+// game.addScene("level1b", new Level(simpleLevel));
+game.addScene("level1b", new Level(level1b));
+game.goToScene("level1b");
 game.start();
