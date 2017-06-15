@@ -51,7 +51,7 @@ class Player extends Cell {
     }
   }
 
-  private moveBy(dx: number, dy: number): void {
+  public moveBy(dx: number, dy: number): void {
     let cell = this.level.grid[this.gridY + dy][this.gridX + dx];
     const delta = new ex.Vector(dx, dy).scale(Cell.size);
 
@@ -84,7 +84,7 @@ class Player extends Cell {
 }
 
 class Level extends ex.Scene {
-  protected player: Player;
+  public player: Player;
   public grid: Array<Array<Cell>>;
 
   private rawLevel: Array<string>;
@@ -315,3 +315,35 @@ let game = new ex.Engine({
 game.addScene("level1b", new Level(level4b));
 game.goToScene("level1b");
 game.start();
+
+document.getElementById("control-left").addEventListener("click", function(event){
+  event.preventDefault();
+
+  if (game.currentScene instanceof Level) {
+    (game.currentScene as Level).player.moveBy(-1, 0);
+  }
+});
+
+document.getElementById("control-up").addEventListener("click", function(event){
+  event.preventDefault();
+
+  if (game.currentScene instanceof Level) {
+    (game.currentScene as Level).player.moveBy(0, -1);
+  }
+});
+
+document.getElementById("control-down").addEventListener("click", function(event){
+  event.preventDefault();
+
+  if (game.currentScene instanceof Level) {
+    (game.currentScene as Level).player.moveBy(0, 1);
+  }
+});
+
+document.getElementById("control-right").addEventListener("click", function(event){
+  event.preventDefault();
+
+  if (game.currentScene instanceof Level) {
+    (game.currentScene as Level).player.moveBy(1, 0);
+  }
+});
