@@ -27,6 +27,10 @@ class Player extends Cell {
     this.level = level;
   }
 
+  public onInitialize(engine: ex.Engine) {
+    this.setZIndex(1);
+  }
+
   public update(engine: ex.Engine, delta: number) {
     super.update(engine, delta);
 
