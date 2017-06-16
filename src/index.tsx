@@ -6,11 +6,21 @@ const txEndPoint = new ex.Texture("./images/EndPoint_Yellow.png");
 const txPlayer = new ex.Texture("./images/Character4.png");
 const txGround = new ex.Texture("./images/GroundGravel_Concrete.png");
 
+const sndOh = new ex.Sound("./sounds/oh.wav");
+const sndDrag = new ex.Sound("./sounds/drag.wav");
+const sndFill = new ex.Sound("./sounds/fill.wav");
+const sndStep = new ex.Sound("./sounds/step.wav");
+
 loader.addResource(txWall);
 loader.addResource(txCrate);
 loader.addResource(txEndPoint);
 loader.addResource(txPlayer);
 loader.addResource(txGround);
+
+loader.addResource(sndOh);
+loader.addResource(sndDrag);
+loader.addResource(sndFill);
+loader.addResource(sndStep);
 
 abstract class Cell extends ex.Actor {
   static readonly size: number = 64;
@@ -92,25 +102,32 @@ class Player extends Cell {
     const delta = new ex.Vector(dx, dy).scale(Cell.size);
 
     if (cell instanceof Wall) {
+      sndOh.play();
       return;
     }
 
     if (cell instanceof Box) {
       let nextCell = this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx];
+
       if (nextCell === undefined) {
+        sndDrag.play();
         cell.pos = cell.pos.add(delta);
         this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
         this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = cell;
 
       } else if (nextCell instanceof Holder) {
+        sndFill.play();
         this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
         this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = undefined;
         cell.kill();
         nextCell.kill();
         this.level.closeHole();
       } else {
+        sndOh.play();
         return;
       }
+    } else {
+      sndStep.play();
     }
 
     this.gridX += dx;
