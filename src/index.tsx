@@ -1,5 +1,5 @@
 abstract class Cell extends ex.Actor {
-  static readonly size: number = 1;
+  static readonly size: number = 40;
 
   constructor(x: number, y: number, color: ex.Color) {
     super(x * Cell.size, y * Cell.size, Cell.size, Cell.size, color);
@@ -135,11 +135,10 @@ class Level extends ex.Scene {
 
     let camera = new ex.LockedCamera();
 
-
     const widthFactor = engine.getDrawWidth() / this.size.x;
     const heightFactor = engine.getDrawHeight() / this.size.y;
 
-    // camera.zoom(Math.floor(Math.min(widthFactor, heightFactor) / Cell.size));
+    // camera.zoom(Math.floor(Math.min(widthFactor, heightFactor) / Cell.size) || 1);
     camera.zoom(Math.min(widthFactor, heightFactor) / Cell.size);
 
     camera.move(
@@ -318,6 +317,7 @@ let game = new ex.Engine({
 
 // game.addScene("level1b", new Level(simpleLevel));
 // game.addScene("level1b", new Level(level1b));
+game.setAntialiasing(false);
 game.addScene("level1b", new Level(level1b));
 game.goToScene("level1b");
 game.start();
