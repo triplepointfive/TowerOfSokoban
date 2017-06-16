@@ -1,5 +1,19 @@
+const loader = new ex.Loader();
+
+const txWall = new ex.Texture("./images/Wall_Black.png");
+const txCrate = new ex.Texture("./images/Crate_Yellow.png");
+const txEndPoint = new ex.Texture("./images/EndPoint_Yellow.png");
+const txPlayer = new ex.Texture("./images/Character4.png");
+const txGround = new ex.Texture("./images/GroundGravel_Concrete.png");
+
+loader.addResource(txWall);
+loader.addResource(txCrate);
+loader.addResource(txEndPoint);
+loader.addResource(txPlayer);
+loader.addResource(txGround);
+
 abstract class Cell extends ex.Actor {
-  static readonly size: number = 40;
+  static readonly size: number = 64;
 
   constructor(x: number, y: number, color: ex.Color) {
     super(x * Cell.size, y * Cell.size, Cell.size, Cell.size, color);
@@ -8,14 +22,35 @@ abstract class Cell extends ex.Actor {
 
 class Wall extends Cell {
   constructor(x: number, y: number) { super(x, y, ex.Color.Gray); }
+
+  public onInitialize(engine: ex.Engine): void {
+    this.addDrawing(txWall);
+  }
 }
 
 class Holder extends Cell {
   constructor(x: number, y: number) { super(x, y, ex.Color.Black); }
+
+  public onInitialize(engine: ex.Engine): void {
+    this.addDrawing(txEndPoint);
+  }
+}
+
+class Ground extends Cell {
+  constructor(x: number, y: number) { super(x, y, ex.Color.Black); }
+
+  public onInitialize(engine: ex.Engine): void {
+    this.setZIndex(-1);
+    this.addDrawing(txGround);
+  }
 }
 
 class Box extends Cell {
   constructor(x: number, y: number) { super(x, y, ex.Color.Orange); }
+
+  public onInitialize(engine: ex.Engine): void {
+    this.addDrawing(txCrate);
+  }
 }
 
 class Player extends Cell {
@@ -29,6 +64,7 @@ class Player extends Cell {
 
   public onInitialize(engine: ex.Engine) {
     this.setZIndex(1);
+    this.addDrawing(txPlayer);
   }
 
   public update(engine: ex.Engine, delta: number) {
@@ -109,20 +145,29 @@ class Level extends ex.Scene {
         let cell: Cell = undefined;
 
         switch (this.rawLevel[i][j]) {
+          case " ":
+            break;
+          case ".":
+            this.addGround(j, i);
+            break;
           case "#":
             cell = new Wall(j, i);
+            this.addGround(j, i);
             break;
           case "0":
             cell = new Box(j, i);
+            this.addGround(j, i);
             break;
-          case ".":
+          case "^":
             cell = new Holder(j, i);
             this.holes += 1;
+            this.addGround(j, i);
             break;
           case "@":
             this.player = new Player(this, j, i);
             // Player is not a part of a grid.
             this.add(this.player);
+            this.addGround(j, i);
             break;
         }
 
@@ -135,8 +180,8 @@ class Level extends ex.Scene {
 
     let camera = new ex.LockedCamera();
 
-    const widthFactor = engine.getDrawWidth() / this.size.x;
-    const heightFactor = engine.getDrawHeight() / this.size.y;
+    const widthFactor = (engine.getDrawWidth() - 20) / this.size.x;
+    const heightFactor = (engine.getDrawHeight() - 20) / this.size.y;
 
     // camera.zoom(Math.floor(Math.min(widthFactor, heightFactor) / Cell.size) || 1);
     camera.zoom(Math.min(widthFactor, heightFactor) / Cell.size);
@@ -150,6 +195,10 @@ class Level extends ex.Scene {
     );
 
     this.camera = camera;
+  }
+
+  private addGround(i: number, j: number): void {
+    this.add(new Ground(i, j));
   }
 
   public closeHole(): void {
@@ -191,17 +240,17 @@ const level1a = [
 
 const level1b = [
   "######  ##### ",
-  "#    #  #   # ",
-  "# 0  #### 0 # ",
-  "# 0      0  # ",
-  "#  ###@###0 # ",
-  "########## ###",
-  "#  ... #     #",
-  "#  #####0    #",
-  "##.#   # 0   #",
-  " #.##### 0   #",
-  " #  ....0 0  #",
-  " #  ##########",
+  "#....#  #...# ",
+  "#.0..####.0.# ",
+  "#.0......0..# ",
+  "#..###@###0.# ",
+  "##########.###",
+  "#..^^^.#.....#",
+  "#..#####0....#",
+  "##^#   #.0...#",
+  " #^#####.0...#",
+  " #..^^^^0.0..#",
+  " #..##########",
   " ####         "
 ];
 
@@ -314,14 +363,11 @@ let game = new ex.Engine({
   displayMode: ex.DisplayMode.FullScreen
 });
 
-
-// game.addScene("level1b", new Level(simpleLevel));
-// game.addScene("level1b", new Level(level1b));
-game.setAntialiasing(false);
+game.setAntialiasing(true);
+game.backgroundColor = ex.Color.DarkGray;
 game.addScene("level1b", new Level(level1b));
 game.goToScene("level1b");
-game.start();
-
+game.start(loader);
 
 const movePlayerBy = function(dx: number, dy: number) {
   if (game.currentScene instanceof Level) {
