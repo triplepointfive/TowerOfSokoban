@@ -2,3 +2,9 @@ node_modules
 ts-built
 dist
 typings/globals
+.bundle
+.cache
+.DS_Store
+.sass-cache
+build/
+source/javascripts/bundle.js
