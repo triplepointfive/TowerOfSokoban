@@ -316,34 +316,32 @@ game.addScene("level1b", new Level(level4b));
 game.goToScene("level1b");
 game.start();
 
-document.getElementById("control-left").addEventListener("click", function(event){
-  event.preventDefault();
 
+const movePlayerBy = function(dx: number, dy: number) {
   if (game.currentScene instanceof Level) {
-    (game.currentScene as Level).player.moveBy(-1, 0);
+    (game.currentScene as Level).player.moveBy(dx, dy);
   }
-});
+};
 
-document.getElementById("control-up").addEventListener("click", function(event){
-  event.preventDefault();
+["click", "touchstart"].forEach(function (action: string) {
 
-  if (game.currentScene instanceof Level) {
-    (game.currentScene as Level).player.moveBy(0, -1);
-  }
-});
+  document.getElementById("control-left").addEventListener(action, function(event){
+    event.preventDefault();
+    movePlayerBy(-1, 0);
+  });
 
-document.getElementById("control-down").addEventListener("click", function(event){
-  event.preventDefault();
+  document.getElementById("control-up").addEventListener(action, function(event){
+    event.preventDefault();
+    movePlayerBy(0, -1);
+  });
 
-  if (game.currentScene instanceof Level) {
-    (game.currentScene as Level).player.moveBy(0, 1);
-  }
-});
+  document.getElementById("control-down").addEventListener(action, function(event){
+    event.preventDefault();
+    movePlayerBy(0, 1);
+  });
 
-document.getElementById("control-right").addEventListener("click", function(event){
-  event.preventDefault();
-
-  if (game.currentScene instanceof Level) {
-    (game.currentScene as Level).player.moveBy(1, 0);
-  }
+  document.getElementById("control-right").addEventListener(action, function(event){
+    event.preventDefault();
+    movePlayerBy(1, 0);
+  });
 });
