@@ -1,6 +1,6 @@
 import * as ex from "excalibur";
 
-import { Resouces, resouces } from "./resources";
+import { LoadableLevel, Resouces, resouces } from "./resources";
 
 const loader = new ex.Loader();
 
@@ -123,9 +123,10 @@ class Level extends ex.Scene {
   private holes: number = 0;
   private size: ex.Vector;
 
-  constructor(level: Array<string>) {
+  constructor(level: LoadableLevel) {
     super();
-    this.rawLevel = level;
+    console.log(level);
+    this.rawLevel = level.grid;
 
     const longestRow = Math.max.apply(null, this.rawLevel.map((row) => row.length));
 
@@ -222,165 +223,16 @@ class Level extends ex.Scene {
   }
 }
 
-const simpleLevel = [
-  "  ######",
-  "  # ..@#",
-  "  # 00 #",
-  "  ## ###",
-  "   # #  ",
-  "   # #  ",
-  "#### #  ",
-  "#    ## ",
-  "# #   # ",
-  "#   # # ",
-  "###   # ",
-  "  ##### "
-];
-
-const level1a = [
-  "######## ######",
-  "# #@   ###    #",
-  "#.## 00    0  #",
-  "#.##  00# 0 0 #",
-  "#.##    #     #",
-  "#.#######0#####",
-  "#.#    #      #",
-  "#.######      #",
-  "#  ....0000   #",
-  "#  #####      #",
-  "####   ########"
-];
-
-const level1b = [
-  "######  ##### ",
-  "#....#  #...# ",
-  "#.0..####.0.# ",
-  "#.0......0..# ",
-  "#..###@###0.# ",
-  "##########.###",
-  "#..^^^.#.....#",
-  "#..#####0....#",
-  "##^#   #.0...#",
-  " #^#####.0...#",
-  " #..^^^^0.0..#",
-  " #..##########",
-  " ####         "
-];
-
-const level2a = [
-  " ####                    ",
-  "## @########             ",
-  "#          #             ",
-  "# 0#####0# #             ",
-  "#  #   # 0 #             ",
-  "# 0 0    0##             ",
-  "# 0  0  #  #             ",
-  "# ####0 ## #             ",
-  "#  0   0 # ##            ",
-  "# ###0#   0 #############",
-  "#   #  0# 0 ............#",
-  "#  0      ###############",
-  "#####  #  #              ",
-  "    #######              "
-];
-
-const level2b = [
-  "###########                 ",
-  "#    #    ###               ",
-  "#  00#00   @#               ",
-  "#     0   ###               ",
-  "#    #    #                 ",
-  "## #########                ",
-  "#  0 #     #                ",
-  "# 00 #0 0 0#                ",
-  "#  0     0 #                ",
-  "# 000#0  0 #################",
-  "#    #  0 0 ...............#",
-  "############################"
-];
-
-const level3a = [
-  "  ########         ",
-  "### #    #         ",
-  "#   0    ###       ",
-  "# # 00#00# #       ",
-  "# 00#      #       ",
-  "# #  0 #   #       ",
-  "#    #0##0##       ",
-  "#  00  0   #       ",
-  "# ##   #   #       ",
-  "#    #0#####       ",
-  "###  0 ############",
-  "  #  0@...........#",
-  "  #################"
-];
-
-const level3b = [
-  "##############     ",
-  "#        #   #     ",
-  "# 00  #00# # #     ",
-  "#  # 0 0 #00 #     ",
-  "## #  #  # # #     ",
-  "#   ##       #     ",
-  "#   # 0 #   ##     ",
-  "# 0 #0 #   ###     ",
-  "##0 #  ############",
-  "#  0    ..........#",
-  "#   # @############",
-  "########           "
-];
-
-const level4a = [
-  "#########################",
-  "#@      ................#",
-  "#       #################",
-  "####### ######           ",
-  " #           #           ",
-  " # 0 0 0 0 0 #           ",
-  "######## #####           ",
-  "#   0 0  0 0 #           ",
-  "#   0        #           ",
-  "##### ########           ",
-  " #  0 0 0   #            ",
-  " #     0    #            ",
-  " # 0 0   0 ##            ",
-  "####### ####             ",
-  "#  0     #               ",
-  "#        #               ",
-  "#   ######               ",
-  "#####                    "
-];
-
-const level4b = [
-  "  #############",
-  "  #  .........#",
-  "  #  .........#",
-  "  #  ##########",
-  "#### #    #####",
-  "#  #0##  ##   #",
-  "#     #### 0  #",
-  "# 00  #  #  0 #",
-  "##  00#   00 ##",
-  " #0  0   #0  # ",
-  " # 00 #  #  0# ",
-  " # 0 0#### 0 # ",
-  " #       #  ## ",
-  " #### 0  # ##  ",
-  "    ### ## #   ",
-  "     # 0   #   ",
-  "     #@ #  #   ",
-  "     #######   "
-];
-
 let game = new ex.Engine({
   displayMode: ex.DisplayMode.FullScreen
 });
 
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
-game.addScene("level1b", new Level(level1b));
-game.goToScene("level1b");
-game.start(loader);
+game.start(loader).then(function() {
+  game.addScene("level1b", new Level(resouces.level1b));
+  game.goToScene("level1b");
+});
 
 const movePlayerBy = function(dx: number, dy: number) {
   if (game.currentScene instanceof Level) {
