@@ -148,11 +148,20 @@ class Level extends ex.Scene {
   constructor(level: Array<string>) {
     super();
     this.rawLevel = level;
-  }
-
-  public onInitialize(engine: ex.Engine) {
     // TODO: Count x as the longest row's length.
     this.size = new ex.Vector(this.rawLevel[0].length, this.rawLevel.length);
+  }
+
+  public update(engine: ex.Engine, delta: number) {
+    super.update(engine, delta);
+
+    if (engine.input.keyboard.wasPressed(ex.Input.Keys.R)) {
+      this.reset(engine);
+    }
+  };
+
+  public reset(engine: ex.Engine): void {
+    this.children.forEach((actor) => actor.kill());
     this.grid = new Array();
 
     for (let i = 0; i < this.size.y; i++) {
@@ -194,8 +203,22 @@ class Level extends ex.Scene {
         }
       }
     }
+  }
 
-    let camera = new ex.LockedCamera();
+  public onInitialize(engine: ex.Engine) {
+    this.reset(engine);
+    this.initCamera(engine);
+  }
+
+  public closeHole(): void {
+    this.holes -= 1;
+    if (this.holes === 0) {
+      alert("You won!");
+    }
+  }
+
+  private initCamera(engine: ex.Engine): void {
+    const camera = new ex.LockedCamera();
 
     const widthFactor = (engine.getDrawWidth() - 20) / this.size.x;
     const heightFactor = (engine.getDrawHeight() - 20) / this.size.y;
@@ -216,13 +239,6 @@ class Level extends ex.Scene {
 
   private addGround(i: number, j: number): void {
     this.add(new Ground(i, j));
-  }
-
-  public closeHole(): void {
-    this.holes -= 1;
-    if (this.holes === 0) {
-      alert("You won!");
-    }
   }
 }
 
