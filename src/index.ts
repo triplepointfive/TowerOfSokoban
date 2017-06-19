@@ -11,56 +11,48 @@ for (const key in resouces) {
 abstract class Cell extends ex.Actor {
   static readonly size: number = 64;
 
-  constructor(x: number, y: number, color: ex.Color) {
-    super(x * Cell.size, y * Cell.size, Cell.size, Cell.size, color);
+  constructor(x: number, y: number, private texture: ex.Texture) {
+    super(x * Cell.size, y * Cell.size, Cell.size, Cell.size);
+  }
+
+  public onInitialize(engine: ex.Engine): void {
+    this.addDrawing(this.texture);
   }
 }
 
 class Wall extends Cell {
-  constructor(x: number, y: number) { super(x, y, ex.Color.Gray); }
-
-  public onInitialize(engine: ex.Engine): void {
-    this.addDrawing(resouces.txWall);
-  }
+  constructor(x: number, y: number) { super(x, y, resouces.txWall); }
 }
 
 class Holder extends Cell {
-  constructor(x: number, y: number) { super(x, y, ex.Color.Black); }
-
-  public onInitialize(engine: ex.Engine): void {
-    this.addDrawing(resouces.txEndPoint);
-  }
+  constructor(x: number, y: number) { super(x, y, resouces.txEndPoint); }
 }
 
 class Ground extends Cell {
-  constructor(x: number, y: number) { super(x, y, ex.Color.Black); }
+  constructor(x: number, y: number) { super(x, y, resouces.txGround); }
 
   public onInitialize(engine: ex.Engine): void {
+    super.onInitialize(engine);
     this.setZIndex(-1);
-    this.addDrawing(resouces.txGround);
   }
 }
 
 class Box extends Cell {
-  constructor(x: number, y: number) { super(x, y, ex.Color.Orange); }
-
-  public onInitialize(engine: ex.Engine): void {
-    this.addDrawing(resouces.txCrate);
-  }
+  constructor(x: number, y: number) { super(x, y, resouces.txCrate); }
 }
 
 class Player extends Cell {
   private level: Level;
 
   constructor(level: Level, private gridX: number, private gridY: number) {
-    super(gridX, gridY, ex.Color.White);
+    super(gridX, gridY, resouces.txPlayer);
 
     this.level = level;
   }
 
   public onInitialize(engine: ex.Engine) {
+    super.onInitialize(engine);
     this.setZIndex(1);
-    this.addDrawing(resouces.txPlayer);
   }
 
   public update(engine: ex.Engine, delta: number) {
