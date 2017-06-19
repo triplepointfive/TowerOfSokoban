@@ -12,9 +12,15 @@ class Cell extends ex.Actor {
     constructor(x, y, texture) {
         super(x * Cell.size, y * Cell.size, Cell.size, Cell.size);
         this.texture = texture;
+        this.origin = new ex.Vector(x, y);
+        this.gridPos = new ex.Vector(x, y);
     }
     onInitialize(engine) {
         this.addDrawing(this.texture);
+    }
+    moveToOrigin() {
+        this.pos = this.origin.scale(Cell.size);
+        this.gridPos = this.origin.clone();
     }
 }
 Cell.size = 64;
@@ -31,14 +37,20 @@ class Ground extends Cell {
         this.setZIndex(-1);
     }
 }
-class Box extends Cell {
+class MovableCell extends Cell {
+    move(dx, dy) {
+        this.pos.x += dx * Cell.size;
+        this.pos.y += dy * Cell.size;
+        this.gridPos.x += dx;
+        this.gridPos.y += dy;
+    }
+}
+class Box extends MovableCell {
     constructor(x, y) { super(x, y, resources_1.resouces.txCrate); }
 }
-class Player extends Cell {
-    constructor(level, gridX, gridY) {
-        super(gridX, gridY, resources_1.resouces.txPlayer);
-        this.gridX = gridX;
-        this.gridY = gridY;
+class Player extends MovableCell {
+    constructor(level, x, y) {
+        super(x, y, resources_1.resouces.txPlayer);
         this.level = level;
     }
     onInitialize(engine) {
@@ -61,27 +73,23 @@ class Player extends Cell {
         }
     }
     moveBy(dx, dy) {
-        let cell = this.level.grid[this.gridY + dy][this.gridX + dx];
-        const delta = new ex.Vector(dx, dy).scale(Cell.size);
+        const delta = new ex.Vector(dx, dy);
+        let cell = this.level.obsticleAt(this.gridPos.add(delta));
         if (cell instanceof Wall) {
             resources_1.resouces.sndOh.play();
             return;
         }
-        if (cell instanceof Box) {
-            let nextCell = this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx];
+        else if (cell instanceof Box) {
+            let nextCell = this.level.obsticleAt(this.gridPos.add(delta.scale(2)));
             if (nextCell === undefined) {
-                resources_1.resouces.sndDrag.play();
-                cell.pos = cell.pos.add(delta);
-                this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
-                this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = cell;
-            }
-            else if (nextCell instanceof Holder) {
-                resources_1.resouces.sndFill.play();
-                this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
-                this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = undefined;
-                cell.kill();
-                nextCell.kill();
-                this.level.closeHole();
+                cell.move(dx, dy);
+                if (this.level.isHoleAt(this.gridPos.add(delta.scale(2)))) {
+                    resources_1.resouces.sndFill.play();
+                    this.level.closeHole();
+                }
+                else {
+                    resources_1.resouces.sndDrag.play();
+                }
             }
             else {
                 resources_1.resouces.sndOh.play();
@@ -91,16 +99,14 @@ class Player extends Cell {
         else {
             resources_1.resouces.sndStep.play();
         }
-        this.gridX += dx;
-        this.gridY += dy;
-        this.pos = this.pos.add(delta);
+        this.move(dx, dy);
     }
 }
 class Level extends ex.Scene {
     constructor(level) {
         super();
-        this.holes = 0;
-        console.log(level);
+        this.boxes = [];
+        this.holes = [];
         this.rawLevel = level.grid;
         const longestRow = Math.max.apply(null, this.rawLevel.map((row) => row.length));
         this.size = new ex.Vector(longestRow, this.rawLevel.length);
@@ -113,7 +119,11 @@ class Level extends ex.Scene {
     }
     ;
     reset(engine) {
-        this.children.forEach((actor) => actor.kill());
+        this.boxes.forEach((actor) => actor.moveToOrigin());
+        // this.holes.forEach((hole) => hole.moveToOrigin());
+        this.player.moveToOrigin();
+    }
+    onInitialize(engine) {
         this.grid = new Array();
         for (let i = 0; i < this.size.y; i++) {
             this.grid[i] = new Array(this.size.x);
@@ -127,16 +137,18 @@ class Level extends ex.Scene {
                         break;
                     case "#":
                         cell = new Wall(j, i);
-                        this.addGround(j, i);
                         break;
                     case "0":
-                        cell = new Box(j, i);
+                        let box = new Box(j, i);
                         this.addGround(j, i);
+                        this.boxes.push(box);
+                        this.add(box);
                         break;
                     case "^":
-                        cell = new Holder(j, i);
-                        this.holes += 1;
+                        let hole = new Holder(j, i);
                         this.addGround(j, i);
+                        this.holes.push(hole);
+                        this.add(hole);
                         break;
                     case "@":
                         this.player = new Player(this, j, i);
@@ -151,16 +163,21 @@ class Level extends ex.Scene {
                 }
             }
         }
-    }
-    onInitialize(engine) {
-        this.reset(engine);
         this.initCamera(engine);
     }
     closeHole() {
-        this.holes -= 1;
-        if (this.holes === 0) {
+        if (this.holes.every((hole) => this.isHoleClosed(hole))) {
             alert("You won!");
         }
+    }
+    obsticleAt(pos) {
+        return this.grid[pos.y][pos.x] || this.boxes.find((box) => box.gridPos.equals(pos));
+    }
+    isHoleAt(pos) {
+        return this.holes.some((hole) => hole.gridPos.equals(pos));
+    }
+    isHoleClosed(hole) {
+        return !!this.obsticleAt(hole.gridPos);
     }
     initCamera(engine) {
         const camera = new ex.LockedCamera();
@@ -181,7 +198,7 @@ let game = new ex.Engine({
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
 game.start(loader).then(function () {
-    game.addScene("level1b", new Level(resources_1.resouces.level4a));
+    game.addScene("level1b", new Level(resources_1.resouces.level1));
     game.goToScene("level1b");
 });
 const movePlayerBy = function (dx, dy) {
@@ -215,6 +232,7 @@ const movePlayerBy = function (dx, dy) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const ex = (typeof window !== "undefined" ? window['ex'] : typeof global !== "undefined" ? global['ex'] : null);
 class LoadableLevel extends ex.Resource {
+    constructor(path) { super(path, "text"); }
     processData(data) {
         this.grid = data.split(/\r?\n/);
     }
@@ -230,15 +248,16 @@ exports.resouces = {
     sndDrag: new ex.Sound("./sounds/drag.wav"),
     sndFill: new ex.Sound("./sounds/fill.wav"),
     sndStep: new ex.Sound("./sounds/step.wav"),
-    level0: new LoadableLevel("./levels/0.txt", "text/plain"),
-    level1a: new LoadableLevel("./levels/1a.txt", "text/plain"),
-    level1b: new LoadableLevel("./levels/1b.txt", "text/plain"),
-    level2a: new LoadableLevel("./levels/2a.txt", "text/plain"),
-    level2b: new LoadableLevel("./levels/2b.txt", "text/plain"),
-    level3a: new LoadableLevel("./levels/3a.txt", "text/plain"),
-    level3b: new LoadableLevel("./levels/3b.txt", "text/plain"),
-    level4a: new LoadableLevel("./levels/4a.txt", "text/plain"),
-    level4b: new LoadableLevel("./levels/4b.txt", "text/plain")
+    level0: new LoadableLevel("./levels/0.txt"),
+    level1: new LoadableLevel("./levels/1.txt"),
+    level1a: new LoadableLevel("./levels/1a.txt"),
+    level1b: new LoadableLevel("./levels/1b.txt"),
+    level2a: new LoadableLevel("./levels/2a.txt"),
+    level2b: new LoadableLevel("./levels/2b.txt"),
+    level3a: new LoadableLevel("./levels/3a.txt"),
+    level3b: new LoadableLevel("./levels/3b.txt"),
+    level4a: new LoadableLevel("./levels/4a.txt"),
+    level4b: new LoadableLevel("./levels/4b.txt")
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
