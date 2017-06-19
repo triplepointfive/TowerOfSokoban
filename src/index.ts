@@ -148,13 +148,12 @@ class Level extends ex.Scene {
     super.update(engine, delta);
 
     if (engine.input.keyboard.wasPressed(ex.Input.Keys.R)) {
-      this.reset(engine);
+      this.reset();
     }
   };
 
-  public reset(engine: ex.Engine): void {
+  public reset(): void {
     this.boxes.forEach((actor) => actor.moveToOrigin());
-    // this.holes.forEach((hole) => hole.moveToOrigin());
     this.player.moveToOrigin();
   }
 
@@ -261,6 +260,12 @@ const movePlayerBy = function(dx: number, dy: number) {
 };
 
 ["click", "touchstart"].forEach(function (action: string) {
+  document.getElementById("control-refresh").addEventListener(action, function(event){
+    event.preventDefault();
+    if (game.currentScene instanceof Level) {
+      (game.currentScene as Level).reset();
+    }
+  });
 
   document.getElementById("control-left").addEventListener(action, function(event){
     event.preventDefault();
