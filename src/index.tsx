@@ -1,26 +1,35 @@
+interface Resouces {
+  [index: string]: ex.ILoadable;
+  txWall: ex.Texture;
+  txCrate: ex.Texture;
+  txEndPoint: ex.Texture;
+  txPlayer: ex.Texture;
+  txGround: ex.Texture;
+
+  sndOh: ex.Sound;
+  sndDrag: ex.Sound;
+  sndFill: ex.Sound;
+  sndStep: ex.Sound;
+}
+
+const resouces: Resouces = {
+  txWall: new ex.Texture("./images/Wall_Black.png"),
+  txCrate: new ex.Texture("./images/Crate_Yellow.png"),
+  txEndPoint: new ex.Texture("./images/EndPoint_Yellow.png"),
+  txPlayer: new ex.Texture("./images/Character4.png"),
+  txGround: new ex.Texture("./images/GroundGravel_Concrete.png"),
+
+  sndOh: new ex.Sound("./sounds/oh.wav"),
+  sndDrag: new ex.Sound("./sounds/drag.wav"),
+  sndFill: new ex.Sound("./sounds/fill.wav"),
+  sndStep: new ex.Sound("./sounds/step.wav")
+};
+
 const loader = new ex.Loader();
 
-const txWall = new ex.Texture("./images/Wall_Black.png");
-const txCrate = new ex.Texture("./images/Crate_Yellow.png");
-const txEndPoint = new ex.Texture("./images/EndPoint_Yellow.png");
-const txPlayer = new ex.Texture("./images/Character4.png");
-const txGround = new ex.Texture("./images/GroundGravel_Concrete.png");
-
-const sndOh = new ex.Sound("./sounds/oh.wav");
-const sndDrag = new ex.Sound("./sounds/drag.wav");
-const sndFill = new ex.Sound("./sounds/fill.wav");
-const sndStep = new ex.Sound("./sounds/step.wav");
-
-loader.addResource(txWall);
-loader.addResource(txCrate);
-loader.addResource(txEndPoint);
-loader.addResource(txPlayer);
-loader.addResource(txGround);
-
-loader.addResource(sndOh);
-loader.addResource(sndDrag);
-loader.addResource(sndFill);
-loader.addResource(sndStep);
+for (const key in resouces) {
+  loader.addResource(resouces[key]);
+}
 
 abstract class Cell extends ex.Actor {
   static readonly size: number = 64;
@@ -34,7 +43,7 @@ class Wall extends Cell {
   constructor(x: number, y: number) { super(x, y, ex.Color.Gray); }
 
   public onInitialize(engine: ex.Engine): void {
-    this.addDrawing(txWall);
+    this.addDrawing(resouces.txWall);
   }
 }
 
@@ -42,7 +51,7 @@ class Holder extends Cell {
   constructor(x: number, y: number) { super(x, y, ex.Color.Black); }
 
   public onInitialize(engine: ex.Engine): void {
-    this.addDrawing(txEndPoint);
+    this.addDrawing(resouces.txEndPoint);
   }
 }
 
@@ -51,7 +60,7 @@ class Ground extends Cell {
 
   public onInitialize(engine: ex.Engine): void {
     this.setZIndex(-1);
-    this.addDrawing(txGround);
+    this.addDrawing(resouces.txGround);
   }
 }
 
@@ -59,7 +68,7 @@ class Box extends Cell {
   constructor(x: number, y: number) { super(x, y, ex.Color.Orange); }
 
   public onInitialize(engine: ex.Engine): void {
-    this.addDrawing(txCrate);
+    this.addDrawing(resouces.txCrate);
   }
 }
 
@@ -74,7 +83,7 @@ class Player extends Cell {
 
   public onInitialize(engine: ex.Engine) {
     this.setZIndex(1);
-    this.addDrawing(txPlayer);
+    this.addDrawing(resouces.txPlayer);
   }
 
   public update(engine: ex.Engine, delta: number) {
@@ -102,7 +111,7 @@ class Player extends Cell {
     const delta = new ex.Vector(dx, dy).scale(Cell.size);
 
     if (cell instanceof Wall) {
-      sndOh.play();
+      resouces.sndOh.play();
       return;
     }
 
@@ -110,24 +119,24 @@ class Player extends Cell {
       let nextCell = this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx];
 
       if (nextCell === undefined) {
-        sndDrag.play();
+        resouces.sndDrag.play();
         cell.pos = cell.pos.add(delta);
         this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
         this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = cell;
 
       } else if (nextCell instanceof Holder) {
-        sndFill.play();
+        resouces.sndFill.play();
         this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
         this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = undefined;
         cell.kill();
         nextCell.kill();
         this.level.closeHole();
       } else {
-        sndOh.play();
+        resouces.sndOh.play();
         return;
       }
     } else {
-      sndStep.play();
+      resouces.sndStep.play();
     }
 
     this.gridX += dx;
