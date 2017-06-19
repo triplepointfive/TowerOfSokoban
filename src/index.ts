@@ -126,8 +126,10 @@ class Level extends ex.Scene {
   constructor(level: Array<string>) {
     super();
     this.rawLevel = level;
-    // TODO: Count x as the longest row's length.
-    this.size = new ex.Vector(this.rawLevel[0].length, this.rawLevel.length);
+
+    const longestRow = Math.max.apply(null, this.rawLevel.map((row) => row.length));
+
+    this.size = new ex.Vector(longestRow, this.rawLevel.length);
   }
 
   public update(engine: ex.Engine, delta: number) {
