@@ -8,16 +8,15 @@
   var watchify = require("watchify");
   var gutil = require("gulp-util");
 
-  var watchedBrowserify = watchify(browserify({
-    basedir: ".",
-    debug: true,
-    entries: ["src/index.tsx"],
-    cache: {},
-    packageCache: {}
-  }).plugin(tsify));
+  var b = browserify()
+    .add("src/index.ts")
+    .plugin(tsify);
+
+  var watchedBrowserify = watchify(b);
 
   function bundle() {
     return watchedBrowserify
+      .transform("browserify-shim")
       .bundle()
       .pipe(source("bundle.js"))
       .pipe(gulp.dest("source/javascripts"));

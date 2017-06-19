@@ -12,6 +12,9 @@
   ],
   "author": "Ilya Smelkov",
   "license": "MIT",
+  "browserify-shim": {
+    "excalibur": "global:ex"
+  },
   "dependencies": {
     "excalibur": "^0.10.0"
   },
