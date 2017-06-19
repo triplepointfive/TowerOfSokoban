@@ -1,6 +1,6 @@
 import * as ex from "excalibur";
 
-import { LoadableLevel, Resouces, resouces } from "./resources";
+import { LoadableLevel, resouces } from "./resources";
 
 const loader = new ex.Loader();
 
@@ -11,12 +11,22 @@ for (const key in resouces) {
 abstract class Cell extends ex.Actor {
   static readonly size: number = 64;
 
+  public gridPos: ex.Vector;
+  protected origin: ex.Vector;
+
   constructor(x: number, y: number, private texture: ex.Texture) {
     super(x * Cell.size, y * Cell.size, Cell.size, Cell.size);
+    this.origin = new ex.Vector(x, y);
+    this.gridPos = new ex.Vector(x, y);
   }
 
   public onInitialize(engine: ex.Engine): void {
     this.addDrawing(this.texture);
+  }
+
+  public moveToOrigin(): void {
+    this.pos = this.origin.scale(Cell.size);
+    this.gridPos = this.origin.clone();
   }
 }
 
@@ -37,16 +47,24 @@ class Ground extends Cell {
   }
 }
 
-class Box extends Cell {
+abstract class MovableCell extends Cell {
+  public move(dx: number, dy: number) {
+    this.pos.x += dx * Cell.size;
+    this.pos.y += dy * Cell.size;
+    this.gridPos.x += dx;
+    this.gridPos.y += dy;
+  }
+}
+
+class Box extends MovableCell {
   constructor(x: number, y: number) { super(x, y, resouces.txCrate); }
 }
 
-class Player extends Cell {
+class Player extends MovableCell {
   private level: Level;
 
-  constructor(level: Level, private gridX: number, private gridY: number) {
-    super(gridX, gridY, resouces.txPlayer);
-
+  constructor(level: Level, x: number, y: number) {
+    super(x, y, resouces.txPlayer);
     this.level = level;
   }
 
@@ -76,30 +94,23 @@ class Player extends Cell {
   }
 
   public moveBy(dx: number, dy: number): void {
-    let cell = this.level.grid[this.gridY + dy][this.gridX + dx];
-    const delta = new ex.Vector(dx, dy).scale(Cell.size);
+    let cell = this.level.obsticleAt(this.gridPos.x + dx, this.gridPos.y + dy);
 
     if (cell instanceof Wall) {
       resouces.sndOh.play();
       return;
-    }
-
-    if (cell instanceof Box) {
-      let nextCell = this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx];
+    } else if (cell instanceof Box) {
+      let nextCell = this.level.obsticleAt(this.gridPos.x + 2 * dx, this.gridPos.y + 2 * dy);
 
       if (nextCell === undefined) {
-        resouces.sndDrag.play();
-        cell.pos = cell.pos.add(delta);
-        this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
-        this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = cell;
+        cell.move(dx, dy);
 
-      } else if (nextCell instanceof Holder) {
-        resouces.sndFill.play();
-        this.level.grid[this.gridY + dy][this.gridX + dx] = undefined;
-        this.level.grid[this.gridY + 2 * dy][this.gridX + 2 * dx] = undefined;
-        cell.kill();
-        nextCell.kill();
-        this.level.closeHole();
+        if (this.level.isHoleAt(this.gridPos.x + 2 * dx, this.gridPos.y + 2 * dy)) {
+          resouces.sndFill.play();
+          this.level.closeHole();
+        } else {
+          resouces.sndDrag.play();
+        }
       } else {
         resouces.sndOh.play();
         return;
@@ -108,24 +119,23 @@ class Player extends Cell {
       resouces.sndStep.play();
     }
 
-    this.gridX += dx;
-    this.gridY += dy;
-    this.pos = this.pos.add(delta);
+    this.move(dx, dy);
   }
 }
 
 class Level extends ex.Scene {
   public player: Player;
-  public grid: Array<Array<Cell>>;
+  private grid: Array<Array<Wall>>;
 
   private rawLevel: Array<string>;
 
-  private holes: number = 0;
   private size: ex.Vector;
+
+  private boxes: Array<Box> = [];
+  private holes: Array<Holder> = [];
 
   constructor(level: LoadableLevel) {
     super();
-    console.log(level);
     this.rawLevel = level.grid;
 
     const longestRow = Math.max.apply(null, this.rawLevel.map((row) => row.length));
@@ -142,14 +152,19 @@ class Level extends ex.Scene {
   };
 
   public reset(engine: ex.Engine): void {
-    this.children.forEach((actor) => actor.kill());
+    this.boxes.forEach((actor) => actor.moveToOrigin());
+    // this.holes.forEach((hole) => hole.moveToOrigin());
+    this.player.moveToOrigin();
+  }
+
+  public onInitialize(engine: ex.Engine) {
     this.grid = new Array();
 
     for (let i = 0; i < this.size.y; i++) {
       this.grid[i] = new Array(this.size.x);
 
       for (let j = 0; j < this.size.x; j++) {
-        let cell: Cell = undefined;
+        let cell: Wall = undefined;
 
         switch (this.rawLevel[i][j]) {
           case " ":
@@ -159,16 +174,18 @@ class Level extends ex.Scene {
             break;
           case "#":
             cell = new Wall(j, i);
-            this.addGround(j, i);
             break;
           case "0":
-            cell = new Box(j, i);
+            let box = new Box(j, i);
             this.addGround(j, i);
+            this.boxes.push(box);
+            this.add(box);
             break;
           case "^":
-            cell = new Holder(j, i);
-            this.holes += 1;
+            let hole = new Holder(j, i);
             this.addGround(j, i);
+            this.holes.push(hole);
+            this.add(hole);
             break;
           case "@":
             this.player = new Player(this, j, i);
@@ -184,18 +201,26 @@ class Level extends ex.Scene {
         }
       }
     }
-  }
 
-  public onInitialize(engine: ex.Engine) {
-    this.reset(engine);
     this.initCamera(engine);
   }
 
   public closeHole(): void {
-    this.holes -= 1;
-    if (this.holes === 0) {
+    if (this.holes.every((hole) => this.isHoleClosed(hole))) {
       alert("You won!");
     }
+  }
+
+  public obsticleAt(x: number, y: number): Cell {
+    return this.grid[y][x] || this.boxes.find((box) => box.gridPos.x === x && box.gridPos.y === y);
+  }
+
+  public isHoleAt(x: number, y: number): boolean {
+    return this.holes.some((hole) => hole.gridPos.x === x && hole.gridPos.y === y);
+  }
+
+  private isHoleClosed(hole: Holder): boolean {
+    return !!this.obsticleAt(hole.gridPos.x, hole.gridPos.y);
   }
 
   private initCamera(engine: ex.Engine): void {
@@ -230,7 +255,7 @@ let game = new ex.Engine({
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
 game.start(loader).then(function() {
-  game.addScene("level1b", new Level(resouces.level4a));
+  game.addScene("level1b", new Level(resouces.level0));
   game.goToScene("level1b");
 });
 

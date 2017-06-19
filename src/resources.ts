@@ -3,6 +3,8 @@ import * as ex from "excalibur";
 export class LoadableLevel extends ex.Resource<string> {
   public grid: Array<string>;
 
+  constructor(path: string) { super(path, "text"); }
+
   public processData(data: string): void {
     this.grid = data.split(/\r?\n/);
   }
@@ -44,13 +46,13 @@ export const resouces: Resouces = {
   sndFill: new ex.Sound("./sounds/fill.wav"),
   sndStep: new ex.Sound("./sounds/step.wav"),
 
-  level0: new LoadableLevel("./levels/0.txt", "text/plain"),
-  level1a: new LoadableLevel("./levels/1a.txt", "text/plain"),
-  level1b: new LoadableLevel("./levels/1b.txt", "text/plain"),
-  level2a: new LoadableLevel("./levels/2a.txt", "text/plain"),
-  level2b: new LoadableLevel("./levels/2b.txt", "text/plain"),
-  level3a: new LoadableLevel("./levels/3a.txt", "text/plain"),
-  level3b: new LoadableLevel("./levels/3b.txt", "text/plain"),
-  level4a: new LoadableLevel("./levels/4a.txt", "text/plain"),
-  level4b: new LoadableLevel("./levels/4b.txt", "text/plain")
+  level0: new LoadableLevel("./levels/0.txt"),
+  level1a: new LoadableLevel("./levels/1a.txt"),
+  level1b: new LoadableLevel("./levels/1b.txt"),
+  level2a: new LoadableLevel("./levels/2a.txt"),
+  level2b: new LoadableLevel("./levels/2b.txt"),
+  level3a: new LoadableLevel("./levels/3a.txt"),
+  level3b: new LoadableLevel("./levels/3b.txt"),
+  level4a: new LoadableLevel("./levels/4a.txt"),
+  level4b: new LoadableLevel("./levels/4b.txt")
 };
