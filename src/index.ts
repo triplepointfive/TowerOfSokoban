@@ -165,8 +165,6 @@ class Level extends ex.Scene {
       this.grid[i] = new Array(this.size.x);
 
       for (let j = 0; j < this.size.x; j++) {
-        let cell: Wall = undefined;
-
         switch (this.rawLevel[i][j]) {
           case " ":
             break;
@@ -174,7 +172,9 @@ class Level extends ex.Scene {
             this.addGround(j, i);
             break;
           case "#":
-            cell = new Wall(j, i);
+            let wall = new Wall(j, i);
+            this.add(wall);
+            this.grid[i][j] = wall;
             break;
           case "0":
             let box = new Box(j, i);
@@ -190,15 +190,9 @@ class Level extends ex.Scene {
             break;
           case "@":
             this.player = new Player(this, j, i);
-            // Player is not a part of a grid.
             this.add(this.player);
             this.addGround(j, i);
             break;
-        }
-
-        if (cell) {
-          this.add(cell);
-          this.grid[i][j] = cell;
         }
       }
     }
