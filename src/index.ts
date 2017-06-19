@@ -230,7 +230,7 @@ let game = new ex.Engine({
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
 game.start(loader).then(function() {
-  game.addScene("level1b", new Level(resouces.level1b));
+  game.addScene("level1b", new Level(resouces.level4a));
   game.goToScene("level1b");
 });
 
