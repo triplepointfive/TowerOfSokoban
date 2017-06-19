@@ -24,6 +24,7 @@ export interface Resouces {
   sndStep: ex.Sound;
 
   level0: LoadableLevel;
+  level1: LoadableLevel;
   level1a: LoadableLevel;
   level1b: LoadableLevel;
   level2a: LoadableLevel;
@@ -47,6 +48,7 @@ export const resouces: Resouces = {
   sndStep: new ex.Sound("./sounds/step.wav"),
 
   level0: new LoadableLevel("./levels/0.txt"),
+  level1: new LoadableLevel("./levels/1.txt"),
   level1a: new LoadableLevel("./levels/1a.txt"),
   level1b: new LoadableLevel("./levels/1b.txt"),
   level2a: new LoadableLevel("./levels/2a.txt"),

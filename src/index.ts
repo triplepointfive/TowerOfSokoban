@@ -94,18 +94,19 @@ class Player extends MovableCell {
   }
 
   public moveBy(dx: number, dy: number): void {
-    let cell = this.level.obsticleAt(this.gridPos.x + dx, this.gridPos.y + dy);
+    const delta = new ex.Vector(dx, dy);
+    let cell = this.level.obsticleAt(this.gridPos.add(delta));
 
     if (cell instanceof Wall) {
       resouces.sndOh.play();
       return;
     } else if (cell instanceof Box) {
-      let nextCell = this.level.obsticleAt(this.gridPos.x + 2 * dx, this.gridPos.y + 2 * dy);
+      let nextCell = this.level.obsticleAt(this.gridPos.add(delta.scale(2)));
 
       if (nextCell === undefined) {
         cell.move(dx, dy);
 
-        if (this.level.isHoleAt(this.gridPos.x + 2 * dx, this.gridPos.y + 2 * dy)) {
+        if (this.level.isHoleAt(this.gridPos.add(delta.scale(2)))) {
           resouces.sndFill.play();
           this.level.closeHole();
         } else {
@@ -211,16 +212,16 @@ class Level extends ex.Scene {
     }
   }
 
-  public obsticleAt(x: number, y: number): Cell {
-    return this.grid[y][x] || this.boxes.find((box) => box.gridPos.x === x && box.gridPos.y === y);
+  public obsticleAt(pos: ex.Vector): Cell {
+    return this.grid[pos.y][pos.x] || this.boxes.find((box) => box.gridPos.equals(pos));
   }
 
-  public isHoleAt(x: number, y: number): boolean {
-    return this.holes.some((hole) => hole.gridPos.x === x && hole.gridPos.y === y);
+  public isHoleAt(pos: ex.Vector): boolean {
+    return this.holes.some((hole) => hole.gridPos.equals(pos));
   }
 
   private isHoleClosed(hole: Holder): boolean {
-    return !!this.obsticleAt(hole.gridPos.x, hole.gridPos.y);
+    return !!this.obsticleAt(hole.gridPos);
   }
 
   private initCamera(engine: ex.Engine): void {
@@ -255,7 +256,7 @@ let game = new ex.Engine({
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
 game.start(loader).then(function() {
-  game.addScene("level1b", new Level(resouces.level0));
+  game.addScene("level1b", new Level(resouces.level1));
   game.goToScene("level1b");
 });
 
