@@ -186,10 +186,10 @@ class Level extends ex.Scene {
     addUI(engine) {
         this.add(new LevelButtonWithImage(resources_1.resouces.uiGoToMenu, "MainMenu", 25, 25));
         this.add(new ResetLevelButton(this, 325, 25));
-        this.add(new PlayerMoveButton(this.player, -1, 0, resources_1.resouces.uiLeft, 30, 600));
-        this.add(new PlayerMoveButton(this.player, 0, 1, resources_1.resouces.uiDown, 130, 600));
-        this.add(new PlayerMoveButton(this.player, 0, -1, resources_1.resouces.uiUp, 230, 600));
-        this.add(new PlayerMoveButton(this.player, 1, 0, resources_1.resouces.uiRight, 325, 600));
+        this.add(new PlayerMoveButton(this.player, -1, 0, resources_1.resouces.uiLeft, 30, 500));
+        this.add(new PlayerMoveButton(this.player, 0, 1, resources_1.resouces.uiDown, 130, 500));
+        this.add(new PlayerMoveButton(this.player, 0, -1, resources_1.resouces.uiUp, 230, 500));
+        this.add(new PlayerMoveButton(this.player, 1, 0, resources_1.resouces.uiRight, 325, 500));
     }
 }
 class ButtonWithImage extends menu_1.Button {
