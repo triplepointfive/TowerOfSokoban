@@ -10,6 +10,6 @@ end
 configure :build do
   activate :minify_css
   activate :relative_assets
-  activate :asset_hash, ignore: [/\.(png|wav)\Z/]
+  activate :asset_hash, ignore: [/\.(png|wav|svg)\Z/]
   # activate :minify_javascript
 end
