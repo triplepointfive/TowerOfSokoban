@@ -248,10 +248,10 @@ class Level extends ex.Scene {
 
     this.add(new ResetLevelButton(this, 325, 25));
 
-    this.add(new PlayerMoveButton(this.player, -1, 0, resouces.uiLeft, 30, 600));
-    this.add(new PlayerMoveButton(this.player, 0, 1, resouces.uiDown, 130, 600));
-    this.add(new PlayerMoveButton(this.player, 0, -1, resouces.uiUp, 230, 600));
-    this.add(new PlayerMoveButton(this.player, 1, 0, resouces.uiRight, 325, 600));
+    this.add(new PlayerMoveButton(this.player, -1, 0, resouces.uiLeft, 30, 500));
+    this.add(new PlayerMoveButton(this.player, 0, 1, resouces.uiDown, 130, 500));
+    this.add(new PlayerMoveButton(this.player, 0, -1, resouces.uiUp, 230, 500));
+    this.add(new PlayerMoveButton(this.player, 1, 0, resouces.uiRight, 325, 500));
   }
 }
 
