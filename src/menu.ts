@@ -10,7 +10,7 @@ export class Button extends ex.UIActor {
   public onInitialize(engine: ex.Engine) {
     super.onInitialize(engine);
 
-    this.on("pointerup", () => { this.onClick(engine); });
+    this.on("pointerup", () => { this.onClick(engine); console.log("a"); });
   }
 }
 

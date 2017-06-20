@@ -246,14 +246,12 @@ class Level extends ex.Scene {
       )
     );
 
+    this.add(new ResetLevelButton(this, 325, 25));
 
-    this.add(
-      new ResetLevelButton(
-        this,
-        325,
-        25
-      )
-    );
+    this.add(new PlayerMoveButton(this.player, -1, 0, resouces.uiLeft, 30, 600));
+    this.add(new PlayerMoveButton(this.player, 0, 1, resouces.uiDown, 130, 600));
+    this.add(new PlayerMoveButton(this.player, 0, -1, resouces.uiUp, 230, 600));
+    this.add(new PlayerMoveButton(this.player, 1, 0, resouces.uiRight, 325, 600));
   }
 }
 
@@ -279,6 +277,12 @@ class ButtonWithImage extends Button {
     ctx.arc(this.x + w / 2, this.y + w / 2, w, 0, 2 * Math.PI);
     ctx.closePath();
     ctx.stroke();
+  }
+}
+
+class PlayerMoveButton extends ButtonWithImage {
+  constructor(player: Player, dx: number, dy: number, drawing: ex.Texture, x: number, y: number) {
+    super(drawing, (engine) => { player.moveBy(dx, dy); }, x, y);
   }
 }
 
@@ -314,33 +318,5 @@ game.start(new SokobanLoader()).then(() => {
 
   game.addScene("MainMenu", new MainMenu());
 
-  game.goToScene("level1a");
-});
-
-const movePlayerBy = function(dx: number, dy: number) {
-  if (game.currentScene instanceof Level) {
-    (game.currentScene as Level).player.moveBy(dx, dy);
-  }
-};
-
-["click", "touchstart"].forEach(function (action: string) {
-  document.getElementById("control-left").addEventListener(action, function(event){
-    event.preventDefault();
-    movePlayerBy(-1, 0);
-  });
-
-  document.getElementById("control-up").addEventListener(action, function(event){
-    event.preventDefault();
-    movePlayerBy(0, -1);
-  });
-
-  document.getElementById("control-down").addEventListener(action, function(event){
-    event.preventDefault();
-    movePlayerBy(0, 1);
-  });
-
-  document.getElementById("control-right").addEventListener(action, function(event){
-    event.preventDefault();
-    movePlayerBy(1, 0);
-  });
+  game.goToScene("MainMenu");
 });
