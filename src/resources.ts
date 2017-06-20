@@ -1,5 +1,15 @@
 import * as ex from "excalibur";
 
+export class SokobanLoader extends ex.Loader {
+  constructor() {
+    super();
+
+    for (const key in resouces) {
+      this.addResource(resouces[key]);
+    }
+  }
+}
+
 export class LoadableLevel extends ex.Resource<string> {
   public grid: Array<string>;
 

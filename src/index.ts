@@ -1,13 +1,7 @@
 import * as ex from "excalibur";
 
-import { LoadableLevel, resouces } from "./resources";
+import { SokobanLoader, resouces, LoadableLevel } from "./resources";
 import { MainMenu } from "./menu";
-
-const loader = new ex.Loader();
-
-for (const key in resouces) {
-  loader.addResource(resouces[key]);
-}
 
 abstract class Cell extends ex.Actor {
   static readonly size: number = 64;
@@ -249,7 +243,7 @@ let game = new ex.Engine({
 
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
-game.start(loader).then(function() {
+game.start(new SokobanLoader()).then(function() {
   game.addScene("level0", new Level(resouces.level0));
   game.addScene("level1", new Level(resouces.level1));
   game.addScene("level1a", new Level(resouces.level1a));
