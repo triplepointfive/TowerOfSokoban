@@ -4,10 +4,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ex = (typeof window !== "undefined" ? window['ex'] : typeof global !== "undefined" ? global['ex'] : null);
 const resources_1 = require("./resources");
-const loader = new ex.Loader();
-for (const key in resources_1.resouces) {
-    loader.addResource(resources_1.resouces[key]);
-}
+const menu_1 = require("./menu");
 class Cell extends ex.Actor {
     constructor(x, y, texture) {
         super(x * Cell.size, y * Cell.size, Cell.size, Cell.size);
@@ -114,13 +111,12 @@ class Level extends ex.Scene {
     update(engine, delta) {
         super.update(engine, delta);
         if (engine.input.keyboard.wasPressed(ex.Input.Keys.R)) {
-            this.reset(engine);
+            this.reset();
         }
     }
     ;
-    reset(engine) {
+    reset() {
         this.boxes.forEach((actor) => actor.moveToOrigin());
-        // this.holes.forEach((hole) => hole.moveToOrigin());
         this.player.moveToOrigin();
     }
     onInitialize(engine) {
@@ -128,7 +124,6 @@ class Level extends ex.Scene {
         for (let i = 0; i < this.size.y; i++) {
             this.grid[i] = new Array(this.size.x);
             for (let j = 0; j < this.size.x; j++) {
-                let cell = undefined;
                 switch (this.rawLevel[i][j]) {
                     case " ":
                         break;
@@ -136,7 +131,9 @@ class Level extends ex.Scene {
                         this.addGround(j, i);
                         break;
                     case "#":
-                        cell = new Wall(j, i);
+                        let wall = new Wall(j, i);
+                        this.add(wall);
+                        this.grid[i][j] = wall;
                         break;
                     case "0":
                         let box = new Box(j, i);
@@ -152,18 +149,14 @@ class Level extends ex.Scene {
                         break;
                     case "@":
                         this.player = new Player(this, j, i);
-                        // Player is not a part of a grid.
                         this.add(this.player);
                         this.addGround(j, i);
                         break;
                 }
-                if (cell) {
-                    this.add(cell);
-                    this.grid[i][j] = cell;
-                }
             }
         }
         this.initCamera(engine);
+        this.addUI(engine);
     }
     closeHole() {
         if (this.holes.every((hole) => this.isHoleClosed(hole))) {
@@ -183,7 +176,6 @@ class Level extends ex.Scene {
         const camera = new ex.LockedCamera();
         const widthFactor = (engine.getDrawWidth() - 20) / this.size.x;
         const heightFactor = (engine.getDrawHeight() - 20) / this.size.y;
-        // camera.zoom(Math.floor(Math.min(widthFactor, heightFactor) / Cell.size) || 1);
         camera.zoom(Math.min(widthFactor, heightFactor) / Cell.size);
         camera.move(new ex.Vector(this.size.x * Cell.size / 2 - Cell.size / 2, this.size.y * Cell.size / 2 - Cell.size / 2), 0);
         this.camera = camera;
@@ -191,46 +183,163 @@ class Level extends ex.Scene {
     addGround(i, j) {
         this.add(new Ground(i, j));
     }
+    addUI(engine) {
+        this.add(new LevelButtonWithImage(resources_1.resouces.uiGoToMenu, "MainMenu", 25, 25));
+        this.add(new ResetLevelButton(this, 325, 25));
+        this.add(new PlayerMoveButton(this.player, -1, 0, resources_1.resouces.uiLeft, 30, 600));
+        this.add(new PlayerMoveButton(this.player, 0, 1, resources_1.resouces.uiDown, 130, 600));
+        this.add(new PlayerMoveButton(this.player, 0, -1, resources_1.resouces.uiUp, 230, 600));
+        this.add(new PlayerMoveButton(this.player, 1, 0, resources_1.resouces.uiRight, 325, 600));
+    }
+}
+class ButtonWithImage extends menu_1.Button {
+    constructor(drawing, onClick, x, y) {
+        super(onClick, x, y, drawing.width);
+        this.drawing = drawing;
+    }
+    onInitialize(engine) {
+        super.onInitialize(engine);
+        this.addDrawing(this.drawing);
+    }
+    draw(ctx, delta) {
+        super.draw(ctx, delta);
+        const w = this.drawing.width;
+        ctx.beginPath();
+        ctx.strokeStyle = ex.Color.White.toString();
+        ctx.lineWidth = 3;
+        ctx.arc(this.x + w / 2, this.y + w / 2, w, 0, 2 * Math.PI);
+        ctx.closePath();
+        ctx.stroke();
+    }
+}
+class PlayerMoveButton extends ButtonWithImage {
+    constructor(player, dx, dy, drawing, x, y) {
+        super(drawing, (engine) => { player.moveBy(dx, dy); }, x, y);
+    }
+}
+class ResetLevelButton extends ButtonWithImage {
+    constructor(level, x, y) {
+        super(resources_1.resouces.uiReset, (engine) => { level.reset(); }, x, y);
+    }
+}
+class LevelButtonWithImage extends ButtonWithImage {
+    constructor(drawing, levelName, x, y) {
+        super(drawing, (engine) => { engine.goToScene(levelName); }, x, y);
+    }
 }
 let game = new ex.Engine({
     displayMode: ex.DisplayMode.FullScreen
 });
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
-game.start(loader).then(function () {
-    game.addScene("level1b", new Level(resources_1.resouces.level1));
-    game.goToScene("level1b");
-});
-const movePlayerBy = function (dx, dy) {
-    if (game.currentScene instanceof Level) {
-        game.currentScene.player.moveBy(dx, dy);
-    }
-};
-["click", "touchstart"].forEach(function (action) {
-    document.getElementById("control-left").addEventListener(action, function (event) {
-        event.preventDefault();
-        movePlayerBy(-1, 0);
-    });
-    document.getElementById("control-up").addEventListener(action, function (event) {
-        event.preventDefault();
-        movePlayerBy(0, -1);
-    });
-    document.getElementById("control-down").addEventListener(action, function (event) {
-        event.preventDefault();
-        movePlayerBy(0, 1);
-    });
-    document.getElementById("control-right").addEventListener(action, function (event) {
-        event.preventDefault();
-        movePlayerBy(1, 0);
-    });
+game.start(new resources_1.SokobanLoader()).then(() => {
+    game.addScene("level0", new Level(resources_1.resouces.level0));
+    game.addScene("level1", new Level(resources_1.resouces.level1));
+    game.addScene("level1a", new Level(resources_1.resouces.level1a));
+    game.addScene("level1b", new Level(resources_1.resouces.level1b));
+    game.addScene("level2a", new Level(resources_1.resouces.level2a));
+    game.addScene("level2b", new Level(resources_1.resouces.level2b));
+    game.addScene("level3a", new Level(resources_1.resouces.level3a));
+    game.addScene("level3b", new Level(resources_1.resouces.level3b));
+    game.addScene("level4a", new Level(resources_1.resouces.level4a));
+    game.addScene("level4b", new Level(resources_1.resouces.level4b));
+    game.addScene("MainMenu", new menu_1.MainMenu());
+    game.goToScene("MainMenu");
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./resources":2}],2:[function(require,module,exports){
+},{"./menu":2,"./resources":3}],2:[function(require,module,exports){
 (function (global){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const ex = (typeof window !== "undefined" ? window['ex'] : typeof global !== "undefined" ? global['ex'] : null);
+const resources_1 = require("./resources");
+class Button extends ex.UIActor {
+    constructor(onClick, x, y, w) {
+        super(x, y, w, w);
+        this.onClick = onClick;
+    }
+    onInitialize(engine) {
+        super.onInitialize(engine);
+        this.on("pointerup", () => { this.onClick(engine); console.log("a"); });
+    }
+}
+exports.Button = Button;
+class LevelButton extends Button {
+    constructor(levelName, x, y, w) {
+        super((engine) => { engine.goToScene(levelName); }, x, y, w);
+    }
+}
+exports.LevelButton = LevelButton;
+class LevelButtonWithText extends LevelButton {
+    constructor(name, levelName, x, y, w) {
+        super(levelName, x, y, w);
+        this.name = name;
+    }
+    draw(ctx, delta) {
+        const rectWidth = 5;
+        ctx.beginPath();
+        ctx.fillStyle = ex.Color.White.toString();
+        ctx.fillRect(this.pos.x, this.pos.y, this.getWidth(), this.getHeight());
+        ctx.fillStyle = ex.Color.DarkGray.toString();
+        ctx.fillRect(this.pos.x + rectWidth, this.pos.y + rectWidth, this.getWidth() - 2 * rectWidth, this.getHeight() - 2 * rectWidth);
+        ctx.fillStyle = ex.Color.Black.toString();
+        ctx.font = "30px serif";
+        ctx.textAlign = "center";
+        ctx.fillText(this.name, this.pos.x + this.getWidth() / 2, this.pos.y + this.getHeight() / 2 + 2 * rectWidth);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+class TopLogo extends ex.UIActor {
+    onInitialize(engine) {
+        super.onInitialize(engine);
+        this.addDrawing(resources_1.resouces.txLogo);
+        this.pos.x += (engine.getDrawWidth() - resources_1.resouces.txLogo.width) / 2;
+    }
+}
+class MainMenu extends ex.Scene {
+    constructor() {
+        super();
+    }
+    onInitialize(engine) {
+        const w = engine.getDrawWidth();
+        let h = engine.getDrawHeight();
+        const topLogoHeight = h / 5;
+        this.add(new TopLogo(0, topLogoHeight / 4, w, topLogoHeight / 2));
+        h -= topLogoHeight;
+        if (h / 17 < w / 9) {
+            const size = h / 17;
+            const offsetH = (w - size * 6) / 3;
+            ["a", "b"].forEach((letter, j) => {
+                [1, 2, 3, 4].forEach((num, i) => {
+                    let button = new LevelButtonWithText(`${num}${letter}`, `level${num}${letter}`, offsetH * (1 + j) + size * 3 * j, topLogoHeight + (size * (1 + i * 4)), size * 3);
+                    this.add(button);
+                });
+            });
+        }
+        else {
+            // TODO: Implement wide screen's layout
+        }
+    }
+}
+exports.MainMenu = MainMenu;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./resources":3}],3:[function(require,module,exports){
+(function (global){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const ex = (typeof window !== "undefined" ? window['ex'] : typeof global !== "undefined" ? global['ex'] : null);
+class SokobanLoader extends ex.Loader {
+    constructor() {
+        super();
+        for (const key in exports.resouces) {
+            this.addResource(exports.resouces[key]);
+        }
+    }
+}
+exports.SokobanLoader = SokobanLoader;
 class LoadableLevel extends ex.Resource {
     constructor(path) { super(path, "text"); }
     processData(data) {
@@ -244,6 +353,13 @@ exports.resouces = {
     txEndPoint: new ex.Texture("./images/EndPoint_Yellow.png"),
     txPlayer: new ex.Texture("./images/Character4.png"),
     txGround: new ex.Texture("./images/GroundGravel_Concrete.png"),
+    txLogo: new ex.Texture("./images/logo.png"),
+    uiGoToMenu: new ex.Texture("./images/log-in.svg"),
+    uiReset: new ex.Texture("./images/refresh-cw.svg"),
+    uiUp: new ex.Texture("./images/chevron-up.svg"),
+    uiDown: new ex.Texture("./images/chevron-down.svg"),
+    uiLeft: new ex.Texture("./images/chevron-left.svg"),
+    uiRight: new ex.Texture("./images/chevron-right.svg"),
     sndOh: new ex.Sound("./sounds/oh.wav"),
     sndDrag: new ex.Sound("./sounds/drag.wav"),
     sndFill: new ex.Sound("./sounds/fill.wav"),
