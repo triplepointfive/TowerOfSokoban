@@ -17,6 +17,7 @@ export interface Resouces {
   txEndPoint: ex.Texture;
   txPlayer: ex.Texture;
   txGround: ex.Texture;
+  txLogo: ex.Texture;
 
   sndOh: ex.Sound;
   sndDrag: ex.Sound;
@@ -41,6 +42,7 @@ export const resouces: Resouces = {
   txEndPoint: new ex.Texture("./images/EndPoint_Yellow.png"),
   txPlayer: new ex.Texture("./images/Character4.png"),
   txGround: new ex.Texture("./images/GroundGravel_Concrete.png"),
+  txLogo: new ex.Texture("./images/logo.png"),
 
   sndOh: new ex.Sound("./sounds/oh.wav"),
   sndDrag: new ex.Sound("./sounds/drag.wav"),

@@ -124,6 +124,90 @@ class Player extends MovableCell {
   }
 }
 
+class LevelButton extends ex.UIActor {
+  constructor(private name: string, x: number, y: number, w: number) {
+    // TODO: Should take in mind horizontal orientation.
+    super(x, y, w, w);
+  }
+
+  public draw(ctx: CanvasRenderingContext2D, delta: number): void {
+    const rectWidth = 5;
+
+    ctx.beginPath();
+
+    ctx.fillStyle = ex.Color.White.toString();
+    ctx.fillRect(this.pos.x, this.pos.y, this.getWidth(), this.getHeight());
+
+    ctx.fillStyle = ex.Color.DarkGray.toString();
+    ctx.fillRect(this.pos.x + rectWidth, this.pos.y + rectWidth, this.getWidth() - 2 * rectWidth, this.getHeight() - 2 * rectWidth);
+
+    ctx.fillStyle = ex.Color.Black.toString();
+    ctx.font = "30px serif";
+    ctx.fillText(
+      this.name,
+      this.pos.x + rectWidth,
+      this.pos.y - 2 * rectWidth + this.getHeight(),
+      this.getWidth() - 2 * rectWidth
+    );
+
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+class TopLogo extends ex.UIActor {
+  public onInitialize(engine: ex.Engine): void {
+    this.addDrawing(resouces.txLogo);
+
+    this.pos.x += (engine.getDrawWidth() - resouces.txLogo.width) / 2;
+  }
+}
+
+class MainMenu extends ex.Scene {
+  constructor() {
+    super();
+  }
+
+  public onInitialize(engine: ex.Engine) {
+    const w = engine.getDrawWidth();
+    let h = engine.getDrawHeight();
+
+    const topLogoHeight = h / 5;
+
+    this.add(
+      new TopLogo(
+        0,
+        topLogoHeight / 4,
+        w,
+        topLogoHeight / 2
+      )
+    );
+
+    h -= topLogoHeight;
+
+    if (h / 17 < w / 9) {
+      const size = h / 17;
+
+      const offsetH = (w - size * 6) / 3;
+
+      ["a", "b"].forEach((letter, j) => {
+        [1, 2, 3, 4].forEach((num, i) => {
+          this.add(
+            new LevelButton(
+              `${num}${letter}`,
+              offsetH * (1 + j) + size * 3 * j,
+              topLogoHeight + (size * (1 + i * 4)),
+              size * 3
+            )
+          );
+        });
+      });
+    } else {
+      // TODO: Implement wide screen's layout
+    }
+  }
+}
+
 class Level extends ex.Scene {
   public player: Player;
   private grid: Array<Array<Wall>>;
@@ -246,11 +330,25 @@ let game = new ex.Engine({
   displayMode: ex.DisplayMode.FullScreen
 });
 
+let menu = new MainMenu();
+
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
 game.start(loader).then(function() {
-  game.addScene("level1b", new Level(resouces.level1));
-  game.goToScene("level1b");
+  game.addScene("level0", new Level(resouces.level0));
+  game.addScene("level1", new Level(resouces.level1));
+  game.addScene("level1a", new Level(resouces.level1a));
+  game.addScene("level1b", new Level(resouces.level1b));
+  game.addScene("level2a", new Level(resouces.level2a));
+  game.addScene("level2b", new Level(resouces.level2b));
+  game.addScene("level3a", new Level(resouces.level3a));
+  game.addScene("level3b", new Level(resouces.level3b));
+  game.addScene("level4a", new Level(resouces.level4a));
+  game.addScene("level4b", new Level(resouces.level4b));
+
+  game.addScene("MainMenu", menu);
+
+  game.goToScene("MainMenu");
 });
 
 const movePlayerBy = function(dx: number, dy: number) {
