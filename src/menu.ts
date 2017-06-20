@@ -2,17 +2,27 @@ import * as ex from "excalibur";
 
 import { resouces } from "./resources";
 
-class LevelButton extends ex.UIActor {
-  constructor(private name: string, x: number, y: number, w: number) {
+export class Button extends ex.UIActor {
+  constructor(private onClick: (engine: ex.Engine) => void, x: number, y: number, w: number) {
     super(x, y, w, w);
   }
 
   public onInitialize(engine: ex.Engine) {
     super.onInitialize(engine);
 
-    this.on("pointerup", () => {
-      engine.goToScene(`level${this.name}`);
-    });
+    this.on("pointerup", () => { this.onClick(engine); });
+  }
+}
+
+export class LevelButton extends Button {
+  constructor(levelName: string, x: number, y: number, w: number) {
+    super((engine) => { engine.goToScene(levelName); }, x, y, w);
+  }
+}
+
+class LevelButtonWithText extends LevelButton {
+  constructor(private name: string, levelName: string, x: number, y: number, w: number) {
+    super(levelName, x, y, w);
   }
 
   public draw(ctx: CanvasRenderingContext2D, delta: number): void {
@@ -79,8 +89,9 @@ export class MainMenu extends ex.Scene {
 
       ["a", "b"].forEach((letter, j) => {
         [1, 2, 3, 4].forEach((num, i) => {
-          let button = new LevelButton(
+          let button = new LevelButtonWithText(
             `${num}${letter}`,
+            `level${num}${letter}`,
             offsetH * (1 + j) + size * 3 * j,
             topLogoHeight + (size * (1 + i * 4)),
             size * 3

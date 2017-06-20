@@ -1,7 +1,7 @@
 import * as ex from "excalibur";
 
 import { SokobanLoader, resouces, LoadableLevel } from "./resources";
-import { MainMenu } from "./menu";
+import { Button, LevelButton, MainMenu } from "./menu";
 
 abstract class Cell extends ex.Actor {
   static readonly size: number = 64;
@@ -192,6 +192,7 @@ class Level extends ex.Scene {
     }
 
     this.initCamera(engine);
+    this.addUI(engine);
   }
 
   public closeHole(): void {
@@ -218,7 +219,6 @@ class Level extends ex.Scene {
     const widthFactor = (engine.getDrawWidth() - 20) / this.size.x;
     const heightFactor = (engine.getDrawHeight() - 20) / this.size.y;
 
-    // camera.zoom(Math.floor(Math.min(widthFactor, heightFactor) / Cell.size) || 1);
     camera.zoom(Math.min(widthFactor, heightFactor) / Cell.size);
 
     camera.move(
@@ -235,6 +235,63 @@ class Level extends ex.Scene {
   private addGround(i: number, j: number): void {
     this.add(new Ground(i, j));
   }
+
+  private addUI(engine: ex.Engine): void {
+    this.add(
+      new LevelButtonWithImage(
+        resouces.uiGoToMenu,
+        "MainMenu",
+        25,
+        25
+      )
+    );
+
+
+    this.add(
+      new ResetLevelButton(
+        this,
+        325,
+        25
+      )
+    );
+  }
+}
+
+class ButtonWithImage extends Button {
+  constructor(private drawing: ex.Texture, onClick: (engine: ex.Engine) => void, x: number, y: number) {
+    super(onClick, x, y, drawing.width);
+  }
+
+  public onInitialize(engine: ex.Engine): void {
+    super.onInitialize(engine);
+
+    this.addDrawing(this.drawing);
+  }
+
+  public draw(ctx: CanvasRenderingContext2D, delta: number): void {
+    super.draw(ctx, delta);
+
+    const w = this.drawing.width;
+
+    ctx.beginPath();
+    ctx.strokeStyle = ex.Color.White.toString();
+    ctx.lineWidth = 3;
+    ctx.arc(this.x + w / 2, this.y + w / 2, w, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.stroke();
+  }
+}
+
+class ResetLevelButton extends ButtonWithImage {
+  constructor(level: Level, x: number, y: number) {
+    super(resouces.uiReset, (engine) => { level.reset(); }, x, y);
+  }
+}
+
+class LevelButtonWithImage extends ButtonWithImage {
+  constructor(drawing: ex.Texture, levelName: string, x: number, y: number) {
+    super(drawing, (engine) => { engine.goToScene(levelName); }, x, y);
+  }
 }
 
 let game = new ex.Engine({
@@ -243,7 +300,7 @@ let game = new ex.Engine({
 
 game.setAntialiasing(true);
 game.backgroundColor = ex.Color.DarkGray;
-game.start(new SokobanLoader()).then(function() {
+game.start(new SokobanLoader()).then(() => {
   game.addScene("level0", new Level(resouces.level0));
   game.addScene("level1", new Level(resouces.level1));
   game.addScene("level1a", new Level(resouces.level1a));
@@ -257,7 +314,7 @@ game.start(new SokobanLoader()).then(function() {
 
   game.addScene("MainMenu", new MainMenu());
 
-  game.goToScene("MainMenu");
+  game.goToScene("level1a");
 });
 
 const movePlayerBy = function(dx: number, dy: number) {
@@ -267,13 +324,6 @@ const movePlayerBy = function(dx: number, dy: number) {
 };
 
 ["click", "touchstart"].forEach(function (action: string) {
-  document.getElementById("control-refresh").addEventListener(action, function(event){
-    event.preventDefault();
-    if (game.currentScene instanceof Level) {
-      (game.currentScene as Level).reset();
-    }
-  });
-
   document.getElementById("control-left").addEventListener(action, function(event){
     event.preventDefault();
     movePlayerBy(-1, 0);

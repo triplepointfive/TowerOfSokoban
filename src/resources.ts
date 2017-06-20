@@ -29,6 +29,13 @@ export interface Resouces {
   txGround: ex.Texture;
   txLogo: ex.Texture;
 
+  uiGoToMenu: ex.Texture;
+  uiReset: ex.Texture;
+  uiUp: ex.Texture;
+  uiDown: ex.Texture;
+  uiLeft: ex.Texture;
+  uiRight: ex.Texture;
+
   sndOh: ex.Sound;
   sndDrag: ex.Sound;
   sndFill: ex.Sound;
@@ -53,6 +60,13 @@ export const resouces: Resouces = {
   txPlayer: new ex.Texture("./images/Character4.png"),
   txGround: new ex.Texture("./images/GroundGravel_Concrete.png"),
   txLogo: new ex.Texture("./images/logo.png"),
+
+  uiGoToMenu: new ex.Texture("./images/log-in.svg"),
+  uiReset: new ex.Texture("./images/refresh-cw.svg"),
+  uiUp: new ex.Texture("./images/chevron-up.svg"),
+  uiDown: new ex.Texture("./images/chevron-down.svg"),
+  uiLeft: new ex.Texture("./images/chevron-left.svg"),
+  uiRight: new ex.Texture("./images/chevron-right.svg"),
 
   sndOh: new ex.Sound("./sounds/oh.wav"),
   sndDrag: new ex.Sound("./sounds/drag.wav"),
